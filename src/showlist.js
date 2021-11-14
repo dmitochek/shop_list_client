@@ -13,9 +13,30 @@ import ListItemText from '@mui/material/ListItemText';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
+import useState from 'react';
 
 export default function Showlist(props)
 {
+    const [checked, setChecked] = React.useState([]);
+    //adding lists to checkboxes state
+    let exist = false;
+
+    for (let i = 0; i < checked.length; ++i)
+    {
+        if (checked[i].name === props.ListChsn)
+        {
+            exist = true;
+            break;
+        }
+    }
+
+    if (!exist && props.ListChsn != null)
+    {
+        const newChecked = [...checked];
+        newChecked.push({ name: props.ListChsn, indexes: [] });
+        setChecked(newChecked);
+        console.log(checked);
+    }
 
     const ListNotChosen = () =>
     {
@@ -28,21 +49,45 @@ export default function Showlist(props)
     }
 
     //[{name: "listname", indexes: [1, 2, 3]}]
-    const [checked, setChecked] = React.useState([]);
+    const checkboxTapAction = (index) =>
+    {
+        let listId;
+        for (let i = 0; i < checked.length; ++i)
+        {
+            if (checked[i].name === props.ListChsn)
+            {
+                listId = i;
+                break;
+            }
+        }
+        return checked[listId].indexes.indexOf(index) !== -1;
+    }
     const handleToggle = (value) => () =>
     {
-        const currentIndex = checked.indexOf(value);
+        let arrayIndex;
+        for (let i = 0; i < checked.length; ++i)
+        {
+            if (checked[i].name === props.ListChsn)
+            {
+                arrayIndex = i;
+                break;
+            }
+        }
+
+
+        const currentIndex = checked[arrayIndex].indexes.indexOf(value);
         const newChecked = [...checked];
 
         if (currentIndex === -1)
         {
-            newChecked.push(value);
+            newChecked[arrayIndex].indexes.push(value);
         } else
         {
-            newChecked.splice(currentIndex, 1);
+            newChecked[arrayIndex].indexes.splice(currentIndex, 1);
         }
 
         setChecked(newChecked);
+        console.log(checked);
     };
 
     const ListChosen = () =>
@@ -99,7 +144,7 @@ export default function Showlist(props)
                                 <ListItemIcon>
                                     <Checkbox
                                         edge="start"
-                                        checked={checked.indexOf(index) !== -1}
+                                        checked={checkboxTapAction(index)}
                                         tabIndex={-1}
                                         disableRipple
                                         inputProps={{ 'aria-labelledby': labelId }}
