@@ -1,5 +1,6 @@
 import './App.css';
 import React from 'react';
+import DialogAddItem from './components/Dialog';
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -14,10 +15,19 @@ import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import useState from 'react';
+import Fab from '@mui/material/Fab';
+import AddIcon from '@mui/icons-material/Add';
 
 export default function Showlist(props)
 {
+    const fabStyle = {
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+    };
+    const [isOpened, setIsOpened] = React.useState(false);
     const [checked, setChecked] = React.useState([]);
+
     //adding lists to checkboxes state
     let exist = false;
 
@@ -62,6 +72,7 @@ export default function Showlist(props)
         }
         return checked[listId].indexes.indexOf(index) !== -1;
     }
+
     const handleToggle = (value) => () =>
     {
         let arrayIndex;
@@ -125,37 +136,45 @@ export default function Showlist(props)
         let elem = data.getuser.lists[current_index].list;
 
         return (
-            <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                {elem.map((value, index) =>
-                {
-                    const labelId = `checkbox-list-label-${index}`;
+            <div className="products">
+                <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+                    {elem.map((value, index) =>
+                    {
+                        const labelId = `checkbox-list-label-${index}`;
 
-                    return (
-                        <ListItem
-                            key={index}
-                            secondaryAction={
-                                <IconButton edge="end" aria-label="comments">
-                                    <EditIcon />
-                                </IconButton>
-                            }
-                            disablePadding
-                        >
-                            <ListItemButton role={undefined} onClick={handleToggle(index)} dense>
-                                <ListItemIcon>
-                                    <Checkbox
-                                        edge="start"
-                                        checked={checkboxTapAction(index)}
-                                        tabIndex={-1}
-                                        disableRipple
-                                        inputProps={{ 'aria-labelledby': labelId }}
-                                    />
-                                </ListItemIcon>
-                                <ListItemText id={labelId} primary={value} />
-                            </ListItemButton>
-                        </ListItem>
-                    );
-                })}
-            </List>
+                        return (
+                            <ListItem
+                                key={index}
+                                secondaryAction={
+                                    <IconButton edge="end" aria-label="comments">
+                                        <EditIcon />
+                                    </IconButton>
+                                }
+                                disablePadding
+                            >
+                                <ListItemButton role={undefined} onClick={handleToggle(index)} dense>
+                                    <ListItemIcon>
+                                        <Checkbox
+                                            edge="start"
+                                            checked={checkboxTapAction(index)}
+                                            tabIndex={-1}
+                                            disableRipple
+                                            inputProps={{ 'aria-labelledby': labelId }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText id={labelId} primary={value} />
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+                <Fab color="primary" sx={fabStyle} aria-label="add" onClick={() => setIsOpened(true)}>
+                    <AddIcon />
+                </Fab>
+
+                <DialogAddItem isOpened={isOpened} callback_dialog={setIsOpened} />
+
+            </div >
         );
     }
 
