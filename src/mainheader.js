@@ -82,7 +82,9 @@ export default function Mainheader(props)
         if (res.data.rename)
         {
             SetPreviousListName(listname);
+            props.PreviousListName(listname);
             setListName(RenameInput);
+            props.ListChosen(RenameInput);
         }
     };
 

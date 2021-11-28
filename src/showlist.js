@@ -101,7 +101,7 @@ export default function Showlist(props)
         console.log(checked);
     };
 
-    const ListChosen = () =>
+    function ListChosen()
     {
         const LISTS = gql`
             query($id : ID!)
@@ -110,6 +110,11 @@ export default function Showlist(props)
                     lists{
                         name
                         list
+                        {
+                            product_name
+                            product_quantity
+                            product_units_value
+                        }
                     }
                 }
             }
@@ -119,6 +124,7 @@ export default function Showlist(props)
         });
 
         if (loading) return <CircularProgress className="loading" />;
+
         if (error) return
         (<Alert severity="error">
             <AlertTitle>Ошибка</AlertTitle>
@@ -126,13 +132,17 @@ export default function Showlist(props)
         </Alert>);
 
         let current_index;
+        console.log(data);
         for (let i = 0; i < data.getuser.lists.length; ++i)
         {
-            if (data.getuser.lists[i].name === props.ListChsn)
+            console.log(data.getuser.lists[i].name + " " + props.ListChsn);
+            if (data.getuser.lists[i].name === props.ListChsn || data.getuser.lists[i].name === props.PrevListNm)
             {
                 current_index = i;
             }
         }
+
+        console.log(props.ListChsn);
         let elem = data.getuser.lists[current_index].list;
 
         return (
@@ -162,7 +172,7 @@ export default function Showlist(props)
                                             inputProps={{ 'aria-labelledby': labelId }}
                                         />
                                     </ListItemIcon>
-                                    <ListItemText id={labelId} primary={value} />
+                                    <ListItemText id={labelId} primary={value.product_name} />
                                 </ListItemButton>
                             </ListItem>
                         );
@@ -172,7 +182,7 @@ export default function Showlist(props)
                     <AddIcon />
                 </Fab>
 
-                <DialogAddItem isOpened={isOpened} callback_dialog={setIsOpened} />
+                <DialogAddItem isOpened={isOpened} callback_dialog={setIsOpened} user_id={props.UsID} list_name={props.ListChsn} />
 
             </div >
         );

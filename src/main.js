@@ -12,9 +12,11 @@ export default class Main extends React.Component
         super(props);
         console.log("Logged user: " + this.props.UserID);
         this.state = {
-            SelectedList: null
+            SelectedList: null,
+            PrListName: null
         };
         this.SelectedList = this.SelectedList.bind(this);
+        this.PreviousListName = this.PreviousListName.bind(this);
     }
 
     SelectedList(list)
@@ -25,6 +27,15 @@ export default class Main extends React.Component
         console.log("You are observing list: " + list);
     }
 
+    PreviousListName(list)
+    {
+        this.setState({
+            PrListName: list
+        });
+        console.log("After renaming list, previous name: " + list);
+    }
+
+
     render()
     {
         return (
@@ -32,8 +43,8 @@ export default class Main extends React.Component
                 <div className="main">
                     <Switch>
                         <Route exact path="/">
-                            <Mainheader UsID={this.props.UserID} ListChosen={this.SelectedList} />
-                            <Showlist UsID={this.props.UserID} ListChsn={this.state.SelectedList} />
+                            <Mainheader UsID={this.props.UserID} ListChosen={this.SelectedList} PreviousListName={this.PreviousListName} />
+                            <Showlist UsID={this.props.UserID} ListChsn={this.state.SelectedList} PrevListNm={this.state.PrListName} />
                         </Route>
                     </Switch>
                 </div>

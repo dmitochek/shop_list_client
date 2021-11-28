@@ -11,6 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
+import { gql, useMutation } from '@apollo/client';
 
 const Transition = React.forwardRef(function Transition(props, ref)
 {
@@ -48,12 +49,19 @@ export default function DialogAddItem(props)
 
     const [unit, setUnit] = React.useState(units[0].value);
     const [product_name, set_product_name] = React.useState("");
+    const [how_much_items, set_how_much_items] = React.useState(0);
 
     const OnUnitChange = (event) =>
     {
         setUnit(event.target.value);
+        console.log(unit);
     };
 
+    const On_items_set = (event) =>
+    {
+        set_how_much_items(event.target.value);
+        console.log(how_much_items);
+    };
 
 
     const func_set_product_name = (event) =>
@@ -61,6 +69,22 @@ export default function DialogAddItem(props)
         set_product_name(event.target.value);
         console.log(product_name);
     }
+
+    // adding new product
+    const ADDLISTITEM = gql`
+        mutation($_id : ID!, $name: String!, $product_name: String!, $product_quantity: Int!, $product_units_value: String!)
+        {
+            addnewlistItem(_id: $_id, name: $name, product_name: $product_name, product_quantity: $product_quantity, product_units_value: $product_units_value) 
+        }
+        `;
+    const [add, { data, loading, error }] = useMutation(ADDLISTITEM, {
+        variables: {
+            _id: props.user_id,
+        }
+    });
+
+    if (loading) return 'Submitting...';
+    if (error) return `Submission error! ${error.message}`;
 
     return (
         <Dialog
@@ -83,7 +107,11 @@ export default function DialogAddItem(props)
                     <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
                         Добавить покупку
                             </Typography>
-                    <Button autoFocus color="inherit" onClick={() => props.callback_dialog(false)}>
+                    <Button autoFocus color="inherit" onClick={() =>
+                    {
+                        props.callback_dialog(false);
+                        add({ variables: { name: props.list_name, product_name: product_name, product_quantity: Number(how_much_items), product_units_value: unit } });
+                    }}>
                         Сохранить
                     </Button>
                 </Toolbar>
@@ -93,7 +121,7 @@ export default function DialogAddItem(props)
                     <TextField autoFocus id="product_name_input" label="Название продукта" value={product_name} onChange={func_set_product_name} variant="standard" sx={{ width: '100vmax' }} />
                 </ListItem>
                 <ListItem margin="dense">
-                    <TextField id="product_quanity" label="Количество" variant="standard" sx={{ mr: 2 }} />
+                    <TextField id="product_quanity" type="number" label="Количество" value={how_much_items} onChange={On_items_set} variant="standard" sx={{ mr: 2 }} />
                     <TextField
                         id="select-unit"
                         select
