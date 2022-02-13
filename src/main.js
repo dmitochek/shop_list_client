@@ -1,54 +1,44 @@
-import './App.css';
-import React from 'react';
-import Mainheader from './mainheader'
-import Showlist from './showlist'
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-
-
-export default class Main extends React.Component
+import * as React from 'react';
+import BarElem from './components/listBar';
+import Listoflists from './components/listOflist';
+import NewListData from './components/newlistname';
+import ShowListData from './addElemList';
+import Authentication from './authentication';
+import AddProducts from './search';
+import Cookies from 'universal-cookie';
+import
 {
-    constructor(props)
+    Routes,
+    Route
+} from "react-router-dom";
+
+export default function Main(props)
+{
+    const [ListName, setListName] = React.useState(null);
+
+    const sentListName = name =>
     {
-        super(props);
-        console.log("Logged user: " + this.props.UserID);
-        this.state = {
-            SelectedList: null,
-            PrListName: null
-        };
-        this.SelectedList = this.SelectedList.bind(this);
-        this.PreviousListName = this.PreviousListName.bind(this);
+        setListName(name);
+        const cookies = new Cookies();
+        cookies.set('current_list', name, { path: '/' });
     }
 
-    SelectedList(list)
-    {
-        this.setState({
-            SelectedList: list
-        });
-        console.log("You are observing list: " + list);
-    }
-
-    PreviousListName(list)
-    {
-        this.setState({
-            PrListName: list
-        });
-        console.log("After renaming list, previous name: " + list);
-    }
-
-
-    render()
-    {
-        return (
-            <Router>
-                <div className="main">
-                    <Switch>
-                        <Route exact path="/">
-                            <Mainheader UsID={this.props.UserID} ListChosen={this.SelectedList} PreviousListName={this.PreviousListName} />
-                            <Showlist UsID={this.props.UserID} ListChsn={this.state.SelectedList} PrevListNm={this.state.PrListName} />
-                        </Route>
-                    </Switch>
-                </div>
-            </Router>
-        );
-    }
+    return (
+        <div className="main">
+            <Routes>
+                <Route path="list-of-lists" element=
+                    {
+                        <div>
+                            <BarElem />
+                            <Listoflists currentlist={sentListName} />
+                            <NewListData currentlist={sentListName} />
+                        </div>
+                    } />
+                <Route path="show-list" element={<ShowListData listname={ListName} />} />
+                <Route path="/" element={<Authentication />} />
+                <Route path="search" element={<AddProducts />} />
+            </Routes>
+        </div>
+    );
 }
+

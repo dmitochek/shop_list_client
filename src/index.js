@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { render } from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
@@ -11,22 +11,22 @@ import
 } from "@apollo/client";
 
 const defaultOptions = {
-  //watchQuery: {
-  //  fetchPolicy: 'no-cache',
-  //  errorPolicy: 'ignore',
-  //},
-  //query: {
-  //  fetchPolicy: 'no-cache',
-  //  errorPolicy: 'all',
-  //},
+  watchQuery: {
+    fetchPolicy: 'no-cache',
+    errorPolicy: 'ignore',
+  },
+  query: {
+    fetchPolicy: 'no-cache',
+    errorPolicy: 'all',
+  },
 }
 const client = new ApolloClient({
   uri: 'http://localhost:4000/',
   cache: new InMemoryCache(),
-  defaultOptions: defaultOptions,
+  defaultOptions: defaultOptions
 });
 
-ReactDOM.render(
+render(
   <ApolloProvider client={client}>
     <App />
   </ApolloProvider>,

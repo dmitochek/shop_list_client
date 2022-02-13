@@ -1,12 +1,7 @@
-#Newalert {
-    margin-top: 15vh;
-    margin-left: 5px;
-    margin-right: 5px;
-}
-
-.loading {
+.googleBut {
     position: absolute;
+    top: 30%;
     left: 50%;
-    top: 20%;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -50%);
+    width: 194px;
 }
