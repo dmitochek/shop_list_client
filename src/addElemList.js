@@ -21,7 +21,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { gql, useQuery } from '@apollo/client';
 import Cookies from 'universal-cookie';
 import CircularProgress from '@mui/material/CircularProgress';
-import EditItem from './components/editItem';
+import EditItemInfo from './components/editItem';
 
 
 const category = ["Хлеб & хлебобулочные изделия", "Овощи & грибы", "Фрукты", "Замороженные овощи", "Молочная продукция", "Мясная & колбасная продукция", "Рыба", "Бакалея", "Напитки", "Кондитерские изделия"];
@@ -100,8 +100,12 @@ export default function ShowListData(props)
     const order = useQuery(GET_CATEGORY_ORDER, { variables: { token: cookies.get('google_token') } });
 
     if (products_list.loading || order.loading) return <CircularProgress sx={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)" }} />;
+
+    console.log(products_list.data);
+
     if (order.data && products_list.data)
     {
+        console.log(order.data, products_list.data);
         products_list.data.getlistproducts.forEach(elem =>
         {
             for (let i = 0; i < products.length; ++i)
@@ -123,8 +127,17 @@ export default function ShowListData(props)
 
     }
 
+    const RequestAgain = (value) =>
+    {
+        if (value)
+        {
+            order.refetch();
+            products_list.refetch();
+        }
+    }
+
     return (
-        <ShowList products={products} listname={cookies.get('current_list')} />
+        <ShowList products={products} listname={cookies.get('current_list')} refetch={RequestAgain} />
     );
 }
 
@@ -156,6 +169,7 @@ class ShowList extends Component
         this.onListExpand = this.onListExpand.bind(this);
         this.changeBoxState = this.changeBoxState.bind(this);
         this.handleCloseEdit = this.handleCloseEdit.bind(this);
+        this.EditCallback = this.EditCallback.bind(this);
     }
 
     onDragEnd(result)
@@ -211,6 +225,12 @@ class ShowList extends Component
                 edit_state: false
             });
         }
+    }
+
+    EditCallback(value)
+    {
+        console.log(this.props);
+        this.props.refetch(value);
     }
 
     render()
@@ -298,12 +318,14 @@ class ShowList extends Component
                                                                                 <ListItemIcon>
                                                                                     <Checkbox
                                                                                         edge="start"
-                                                                                        checked={this.state.products_state[this.changeBoxState(this.props.products[item.id].category)][product_index]}
+                                                                                        checked={this.state.products_state[
+                                                                                            this.changeBoxState(this.props.products[item.id].category)][product_index]}
                                                                                         tabIndex={-1}
                                                                                         disableRipple
                                                                                     />
                                                                                 </ListItemIcon>
-                                                                                <ListItemText primary={this.state.products_state[this.changeBoxState(this.props.products[item.id].category)][product_index] ?
+                                                                                <ListItemText primary={this.state.products_state[this.changeBoxState(
+                                                                                    this.props.products[item.id].category)][product_index] ?
                                                                                     <p style={{ textDecoration: "line-through" }}>{product}</p> : <p>{product}</p>} />
                                                                             </ListItemButton>
                                                                         </ListItem>
@@ -325,7 +347,7 @@ class ShowList extends Component
                         )}
                     </Droppable>
                 </DragDropContext>
-                {this.state.edit_state && <EditItem productName={this.state.current_product} Compstate={this.state.edit_state} returnState={this.handleCloseEdit} />}
+                {this.state.edit_state && <EditItemInfo productName={this.state.current_product} Compstate={this.state.edit_state} returnState={this.handleCloseEdit} refetch={this.EditCallback} />}
             </div>
         );
     }

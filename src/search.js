@@ -50,6 +50,12 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 export default function AddProducts(props)
 {
+    const [SearchInput, setSearchInput] = React.useState(null);
+
+    const SearchInputf = (e) =>
+    {
+        console.log(e.target.value);
+    }
 
     return (
         <div className="search">
@@ -66,7 +72,7 @@ export default function AddProducts(props)
                     >
                         <ArrowBackIcon />
                     </IconButton>
-                    <Search>
+                    <Search onChange={SearchInputf}>
                         <SearchIconWrapper>
                             <SearchIcon />
                         </SearchIconWrapper>
@@ -77,6 +83,7 @@ export default function AddProducts(props)
                     </Search>
                 </Toolbar>
             </AppBar>
+
             <PopularAndRecentInfo />
         </div>
     );
