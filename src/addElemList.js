@@ -18,13 +18,14 @@ import Checkbox from '@mui/material/Checkbox';
 import EditIcon from '@mui/icons-material/Edit';
 import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';
-import { gql, useQuery } from '@apollo/client';
+import { gql, useQuery, useMutation } from '@apollo/client';
 import Cookies from 'universal-cookie';
 import CircularProgress from '@mui/material/CircularProgress';
-import EditItemInfo from './components/editItem';
+import EditItem from './components/editItem';
 
 
 const category = ["Хлеб & хлебобулочные изделия", "Овощи & грибы", "Фрукты", "Замороженные овощи", "Молочная продукция", "Мясная & колбасная продукция", "Рыба", "Бакалея", "Напитки", "Кондитерские изделия"];
+const unit = ["литр", "кг", "граммы", "упаковки", "мл"];
 
 // data generator
 const getItems = count =>
@@ -67,7 +68,8 @@ const getListStyle = isDraggingOver => ({
 
 export default function ShowListData(props)
 {
-    //const [listname, setListName] = React.useState(props.listname);
+    const [all_products_info, set_all_products_info] = React.useState(null);
+
     const compare = (a, b) =>
     {
         let arr = order.data.getuser.category_order;
@@ -75,14 +77,56 @@ export default function ShowListData(props)
         else return 1;
     }
 
+    // from here
+    const UPDATE_PRODUCTS = gql`
+    mutation Editproduct($token: String!, $listname: String!, $product: String!, $newcategory: Int!, $newunit: Int!, $newnote: String, $newquanity: Float!) {
+        editproduct(token: $token, listname: $listname, product: $product, newcategory: $newcategory, newunit: $newunit, newnote: $newnote, newquanity: $newquanity) 
+    }
+    `;
+
+    const [updateproduct, updateInfo] = useMutation(UPDATE_PRODUCTS);
+
+    const callback = ({ productName, currentcategory, currentunit, quantity, comment, condition }) =>
+    {
+        if (!condition) return;
+
+        updateproduct({
+            variables: {
+                token: cookies.get('google_token'), listname: cookies.get('current_list'), product: productName,
+                newcategory: category.indexOf(currentcategory), newunit: unit.indexOf(currentunit), newquanity: parseFloat(quantity), newnote: comment
+            }
+        });
+
+        all_products_info.forEach((elem, index) =>
+        {
+            if (elem.name === productName && elem.category !== category.indexOf(currentcategory))
+            {
+                console.log(JSON.stringify(all_products_info));
+
+                let temp = [...all_products_info];
+                temp[index].category = category.indexOf(currentcategory);
+                set_all_products_info(temp);
+
+                console.log(JSON.stringify(temp));
+            }
+        });
+
+    }
+    // to here
+
     let products = [];
 
     const cookies = new Cookies();
-    const GET_LIST = gql`
-    query Getlistproducts($token: String!, $listname: String!) {
-        getlistproducts(token: $token, listname: $listname) {
+
+    const GET_FULL_LIST_INFO = gql`
+    query Getproducts($token: String!, $listname: String!) {
+        getproducts(token: $token, listname: $listname) {
             name
+            quanity
+            note
+            unit
             category
+            checked
         }
     }
     `;
@@ -96,17 +140,20 @@ export default function ShowListData(props)
     }
     `;
 
-    const products_list = useQuery(GET_LIST, { variables: { token: cookies.get('google_token'), listname: cookies.get('current_list') } });
+    const products_list = useQuery(GET_FULL_LIST_INFO, { variables: { token: cookies.get('google_token'), listname: cookies.get('current_list') } });
     const order = useQuery(GET_CATEGORY_ORDER, { variables: { token: cookies.get('google_token') } });
 
     if (products_list.loading || order.loading) return <CircularProgress sx={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)" }} />;
 
-    console.log(products_list.data);
+    if (products_list.data.getproducts !== all_products_info)
+        set_all_products_info(products_list.data.getproducts);
 
     if (order.data && products_list.data)
     {
-        console.log(order.data, products_list.data);
-        products_list.data.getlistproducts.forEach(elem =>
+        if (all_products_info === null) return <CircularProgress sx={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)" }} />;
+
+        console.log(all_products_info);
+        all_products_info.forEach(elem =>
         {
             for (let i = 0; i < products.length; ++i)
             {
@@ -127,17 +174,9 @@ export default function ShowListData(props)
 
     }
 
-    const RequestAgain = (value) =>
-    {
-        if (value)
-        {
-            order.refetch();
-            products_list.refetch();
-        }
-    }
-
+    console.log(JSON.stringify(products), "!!!!!!!!!!!!!!");
     return (
-        <ShowList products={products} listname={cookies.get('current_list')} refetch={RequestAgain} />
+        <ShowList products={products} listname={cookies.get('current_list')} entireProductInfo={all_products_info} callback={callback} />
     );
 }
 
@@ -169,7 +208,7 @@ class ShowList extends Component
         this.onListExpand = this.onListExpand.bind(this);
         this.changeBoxState = this.changeBoxState.bind(this);
         this.handleCloseEdit = this.handleCloseEdit.bind(this);
-        this.EditCallback = this.EditCallback.bind(this);
+        this.EditProductCallback = this.EditProductCallback.bind(this);
     }
 
     onDragEnd(result)
@@ -188,6 +227,26 @@ class ShowList extends Component
 
         this.setState({
             items
+        });
+    }
+
+    componentWillReceiveProps(props)
+    {
+        const temp_array = [], temp = [];
+        for (let i = 0; i < props.products.length; ++i)
+        {
+            temp_array.push([]);
+            for (let j = 0; j < props.products[i].list.length; ++j)
+                temp_array[i].push(false);
+        }
+
+        for (let i = 0; i < props.products.length; ++i)
+            temp[i] = false;
+
+        this.setState({
+            items: getItems(props.products.length),
+            products_state: [...temp_array],
+            IsListExpanded: [...temp],
         });
     }
 
@@ -210,9 +269,14 @@ class ShowList extends Component
 
     EditItemInfo(product)
     {
-        console.log(product);
+        let res;
+        this.props.entireProductInfo.forEach(e =>
+        {
+            if (e.name === product) res = e;
+        });
+
         this.setState({
-            current_product: product,
+            current_product: res,
             edit_state: true
         });
     }
@@ -227,10 +291,9 @@ class ShowList extends Component
         }
     }
 
-    EditCallback(value)
+    EditProductCallback(value)
     {
-        console.log(this.props);
-        this.props.refetch(value);
+        this.props.callback(value);
     }
 
     render()
@@ -333,7 +396,6 @@ class ShowList extends Component
                                                                 )}
                                                             </List>
 
-
                                                         }
 
                                                     </div>
@@ -347,7 +409,7 @@ class ShowList extends Component
                         )}
                     </Droppable>
                 </DragDropContext>
-                {this.state.edit_state && <EditItemInfo productName={this.state.current_product} Compstate={this.state.edit_state} returnState={this.handleCloseEdit} refetch={this.EditCallback} />}
+                {this.state.edit_state && <EditItem product={this.state.current_product} Compstate={this.state.edit_state} returnState={this.handleCloseEdit} callback={this.EditProductCallback} />}
             </div>
         );
     }

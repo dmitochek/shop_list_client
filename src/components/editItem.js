@@ -26,67 +26,17 @@ const Transition = React.forwardRef(function Transition(props, ref)
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function EditItemInfo(props)
+export default function EditItem(props)
 {
-    const cookies = new Cookies();
-    const GET_PRODUCT_INFO = gql`
-    query Getproduct($token: String!, $listname: String!, $product: String!) {
-        getproduct(token: $token, listname: $listname, product: $product) {
-            category 
-            unit
-            note
-            quanity
-        }
-    }
-    `;
-
-    const UPDATE_PRODUCTS = gql`
-    mutation Editproduct($token: String!, $listname: String!, $product: String!, $newcategory: Int!, $newunit: Int!, $newnote: String, $newquanity: Float!) {
-        editproduct(token: $token, listname: $listname, product: $product, newcategory: $newcategory, newunit: $newunit, newnote: $newnote, newquanity: $newquanity) 
-    }
-    `;
-
-    const [updateproduct, updateInfo] = useMutation(UPDATE_PRODUCTS);
-
-    const callback = ({ currentcategory, currentunit, quantity, comment, condition }) =>
-    {
-        if (!condition) return;
-
-        updateproduct({
-            variables: {
-                token: cookies.get('google_token'), listname: cookies.get('current_list'), product: props.productName,
-                newcategory: category.indexOf(currentcategory), newunit: unit.indexOf(currentunit), newquanity: parseFloat(quantity), newnote: comment
-            }
-        });
-
-        props.refetch(true);
-        //props.refetch1();
-        //props.refetch2();
-    }
-
-    const handleClose = (value) =>
-    {
-        props.returnState(false);
-    };
-
-    const { data, loading } = useQuery(GET_PRODUCT_INFO, { variables: { token: cookies.get('google_token'), listname: cookies.get('current_list'), product: props.productName } });
-
-    if (loading) return <CircularProgress sx={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)" }} />;
-
-    return <EditItem menu={data} Compstate={props.Compstate} returnState={handleClose} productName={props.productName} callback={callback} />
-}
-
-function EditItem(props)
-{
-    const [categoryVal, setCategory] = React.useState(category[props.menu.getproduct.category]);
-    const [unitVal, setUnit] = React.useState(unit[props.menu.getproduct.unit]);
-    const [quantityVal, setQuantity] = React.useState(props.menu.getproduct.quanity);
-    const [commentVal, setComment] = React.useState(props.menu.getproduct.note);
+    const [categoryVal, setCategory] = React.useState(category[props.product.category]);
+    const [unitVal, setUnit] = React.useState(unit[props.product.unit]);
+    const [quantityVal, setQuantity] = React.useState(props.product.quanity);
+    const [commentVal, setComment] = React.useState(props.product.note);
 
     const handleClose = (e) =>
     {
         props.returnState(false);
-        props.callback({ currentcategory: categoryVal, currentunit: unitVal, quantity: quantityVal, comment: commentVal, condition: e.target.id === "save" ? true : false });
+        props.callback({ productName: props.product.name, currentcategory: categoryVal, currentunit: unitVal, quantity: quantityVal, comment: commentVal, condition: e.target.id === "save" ? true : false });
         console.log(e.target.id)
     };
 
@@ -128,7 +78,7 @@ function EditItem(props)
                         <CloseIcon />
                     </IconButton>
                     <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-                        {props.productName}
+                        {props.product.name}
                     </Typography>
                     <Button autoFocus color="inherit" onClick={handleClose} id="save">
                         Сохранить
@@ -175,7 +125,7 @@ function EditItem(props)
                     label="Комментарий"
                     multiline
                     rows={3}
-                    defaultValue={props.menu.getproduct.note === null ? "" : props.menu.getproduct.note}
+                    defaultValue={props.product.note === null ? "" : props.product.note}
                     onChange={handleComment}
                 />
             </Box>
