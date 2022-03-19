@@ -53,7 +53,8 @@ function NewList(props)
     const fabStyle = {
         position: 'absolute',
         bottom: 16,
-        right: 16
+        right: 16,
+        zIndex: 10,
     };
 
     const buttonClicked = () =>
@@ -79,7 +80,7 @@ function NewList(props)
                 TransitionComponent={Transition}
             >
                 <Box sx={{ height: '100vh' }}>
-                    <AppBar sx={{ position: 'relative', bgcolor: "forestgreen" }} >
+                    <AppBar sx={{ position: 'relative' }} >
                         <Toolbar>
                             <IconButton
                                 edge="start"
@@ -96,7 +97,7 @@ function NewList(props)
                     </AppBar>
                     <TextField label="Название" onChange={nameHandler} variant="standard" sx={{ borderRadius: "3px", bgcolor: 'white', width: '70%', position: 'absolute', left: '50%', top: '30%', marginRight: '-50%', transform: 'translate(-50%,-50%)' }} />
                     <Link to="/show-list">
-                        <Button variant="outlined" onClick={buttonClicked} sx={{ position: 'absolute', left: '50%', top: '40%', marginRight: '-50%', transform: 'translate(-50%,-50%)' }}>
+                        <Button variant="contained" onClick={buttonClicked} sx={{ position: 'absolute', left: '50%', top: '40%', marginRight: '-50%', transform: 'translate(-50%,-50%)' }}>
                             Создать список
                         </Button>
                     </Link>

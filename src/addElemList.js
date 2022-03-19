@@ -69,6 +69,8 @@ const getListStyle = isDraggingOver => ({
 export default function ShowListData(props)
 {
     const [all_products_info, set_all_products_info] = React.useState(null);
+    const [list_expand, set_list_expand] = React.useState(null);
+    const [list_order, set_list_order] = React.useState(null);
 
     const compare = (a, b) =>
     {
@@ -77,7 +79,61 @@ export default function ShowListData(props)
         else return 1;
     }
 
-    // from here
+    const ListExpanded = (array) =>
+    {
+        set_list_expand(array);
+    }
+
+    const ListOrder = (array) =>
+    {
+        set_list_order(array);
+    }
+
+    // start update products states
+
+    const changeStates = (states) =>
+    {
+        const list_array = Array.from(products.map(elem => { return elem.list }));
+        updatestates({
+            variables: {
+                token: cookies.get('google_token'), listname: cookies.get('current_list'),
+                listarray: list_array, liststates: states
+            }
+        });
+
+        let new_array = [], numb;
+
+        all_products_info.forEach((elem) =>
+        {
+            for (let i = 0; i < products.length; ++i)
+            {
+
+                if ((numb = products[i].list.indexOf(elem.name)) !== -1)
+                {
+
+                    let obj = Object.assign(elem);
+                    obj.checked = states[i][numb];
+                    new_array.push(obj);
+                    break;
+                }
+
+            }
+        });
+
+        set_all_products_info(new_array);
+
+
+
+    }
+
+    const UPDATE_PRODUCTS_STATES = gql`
+    mutation UpdateStates($token: String!, $listname: String!, $listarray: [[String!]], $liststates: [[Boolean!]]) {
+        editproductssate(token: $token, listname: $listname, listarray: $listarray, liststates: $liststates) 
+    }
+    `;
+    const [updatestates, updatestatesInfo] = useMutation(UPDATE_PRODUCTS_STATES);
+    // end
+
     const UPDATE_PRODUCTS = gql`
     mutation Editproduct($token: String!, $listname: String!, $product: String!, $newcategory: Int!, $newunit: Int!, $newnote: String, $newquanity: Float!) {
         editproduct(token: $token, listname: $listname, product: $product, newcategory: $newcategory, newunit: $newunit, newnote: $newnote, newquanity: $newquanity) 
@@ -101,18 +157,15 @@ export default function ShowListData(props)
         {
             if (elem.name === productName && elem.category !== category.indexOf(currentcategory))
             {
-                console.log(JSON.stringify(all_products_info));
 
                 let temp = [...all_products_info];
                 temp[index].category = category.indexOf(currentcategory);
                 set_all_products_info(temp);
 
-                console.log(JSON.stringify(temp));
             }
         });
 
     }
-    // to here
 
     let products = [];
 
@@ -152,7 +205,6 @@ export default function ShowListData(props)
     {
         if (all_products_info === null) return <CircularProgress sx={{ position: "fixed", top: "40%", left: "50%", transform: "translate(-50%,-50%)" }} />;
 
-        console.log(all_products_info);
         all_products_info.forEach(elem =>
         {
             for (let i = 0; i < products.length; ++i)
@@ -160,11 +212,12 @@ export default function ShowListData(props)
                 if (products[i].category === elem.category)
                 {
                     products[i].list.push(elem.name);
+                    products[i].states.push(elem.checked);
                     return;
                 }
             }
 
-            products.push({ id: null, category: elem.category, list: [elem.name] });
+            products.push({ id: null, category: elem.category, list: [elem.name], states: [elem.checked] });
 
         });
 
@@ -174,9 +227,9 @@ export default function ShowListData(props)
 
     }
 
-    console.log(JSON.stringify(products), "!!!!!!!!!!!!!!");
     return (
-        <ShowList products={products} listname={cookies.get('current_list')} entireProductInfo={all_products_info} callback={callback} />
+        <ShowList products={products} listname={cookies.get('current_list')} entireProductInfo={all_products_info}
+            callback={callback} productsStates={changeStates} IsListExpanded={ListExpanded} ListExpandationList={list_expand} ListOrder={ListOrder} ReturnListOrder={list_order} />
     );
 }
 
@@ -186,11 +239,12 @@ class ShowList extends Component
     constructor(props)
     {
         const temp_array = [], temp = [];
+
         for (let i = 0; i < props.products.length; ++i)
         {
             temp_array.push([]);
             for (let j = 0; j < props.products[i].list.length; ++j)
-                temp_array[i].push(false);
+                temp_array[i].push(props.products[i].states[j]);
         }
 
         for (let i = 0; i < props.products.length; ++i)
@@ -237,17 +291,21 @@ class ShowList extends Component
         {
             temp_array.push([]);
             for (let j = 0; j < props.products[i].list.length; ++j)
-                temp_array[i].push(false);
+                temp_array[i].push(props.products[i].states[j]);
         }
 
         for (let i = 0; i < props.products.length; ++i)
-            temp[i] = false;
+        {
+            if (props.ListExpandationList === null) temp[i] = false;
+            else temp.push(props.ListExpandationList[i]);
+        }
 
         this.setState({
-            items: getItems(props.products.length),
+            items: props.ReturnListOrder === null ? getItems(props.products.length) : props.ReturnListOrder,
             products_state: [...temp_array],
             IsListExpanded: [...temp],
         });
+
     }
 
     onListExpand(e)
@@ -299,13 +357,14 @@ class ShowList extends Component
     render()
     {
         const fabStyle = {
-            position: 'absolute',
+            position: 'fixed',
             bottom: 16,
-            right: 16
+            right: 16,
+            zIndex: 10,
         };
         return (
             <div>
-                <AppBar sx={{ position: 'relative', bgcolor: "forestgreen" }} >
+                <AppBar sx={{ position: 'relative' }} >
                     <Toolbar>
                         <IconButton
                             edge="start"
@@ -377,6 +436,11 @@ class ShowList extends Component
                                                                                 this.setState({
                                                                                     products_state: [...product_states_temp]
                                                                                 });
+
+                                                                                this.props.productsStates(product_states_temp);
+                                                                                this.props.IsListExpanded(this.state.IsListExpanded);
+                                                                                this.props.ListOrder(this.state.items);
+
                                                                             }} dense>
                                                                                 <ListItemIcon>
                                                                                     <Checkbox

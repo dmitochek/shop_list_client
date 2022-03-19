@@ -66,7 +66,7 @@ function PopularAndRecent(props)
                             <ListItemIcon>
                                 <Checkbox
                                     edge="start"
-                                    checked={true}
+                                    checked={false}
                                     tabIndex={-1}
                                     disableRipple
                                 />

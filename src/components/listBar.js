@@ -25,7 +25,7 @@ export default function BarElem()
   return (
     <div className="bar">
       <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static" sx={{ bgcolor: "forestgreen" }}>
+        <AppBar position="static">
           <Toolbar>
             <IconButton
               size="large"
@@ -55,7 +55,7 @@ export default function BarElem()
               <ListItemIcon>
                 <AccountCircleIcon />
               </ListItemIcon>
-              <ListItemText primary="Mom" />
+              <ListItemText primary="User" />
             </ListItem>
             <Divider />
             <ListItemButton sx={listItemStyle} >

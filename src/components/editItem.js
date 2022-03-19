@@ -67,7 +67,7 @@ export default function EditItem(props)
             onClose={handleClose}
             TransitionComponent={Transition}
         >
-            <AppBar sx={{ position: 'relative', backgroundColor: 'forestgreen' }}>
+            <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <IconButton
                         edge="start"
